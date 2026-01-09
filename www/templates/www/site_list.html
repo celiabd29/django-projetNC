@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sites sportifs</title>
+  <style>
+    body{font-family:system-ui;margin:0;background:#f6f6f6}
+    .wrap{max-width:1100px;margin:0 auto;padding:16px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+    .card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 8px rgba(0,0,0,.06)}
+    .muted{color:#666;font-size:.95rem}
+    .top{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+    input,select{padding:10px;border-radius:10px;border:1px solid #ddd;background:#fff}
+    .btn{padding:10px 14px;border-radius:10px;border:0;background:#111;color:#fff;cursor:pointer}
+    .pagination{display:flex;gap:8px;align-items:center;justify-content:center;margin:16px 0}
+    a{color:inherit;text-decoration:none}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eee;margin:3px 6px 0 0;font-size:.85rem}
+    img{width:100%;border-radius:12px;display:block}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Sites sportifs emblématiques</h1>
+
+  <!-- (Phase 3.3) barre de recherche + filtres -->
+  <form method="get" class="top">
+    <input type="text" name="q" placeholder="Rechercher (mots clés…)" value="{{ q }}"/>
+
+    <select name="typologie" multiple size="1">
+      <option value="all">Toutes les typologies</option>
+      {% for t in typologies %}
+        <option value="{{ t.id }}" {% if t.id|stringformat:"s" in selected_typ %}selected{% endif %}>{{ t.label }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="denomination" multiple size="1">
+      <option value="all">Toutes les dénominations</option>
+      {% for d in denominations %}
+        <option value="{{ d.id }}" {% if d.id|stringformat:"s" in selected_den %}selected{% endif %}>{{ d.label }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="date_ref" multiple size="1">
+      <option value="all">Toutes les dates</option>
+      {% for dr in dates_ref %}
+        <option value="{{ dr.id }}" {% if dr.id|stringformat:"s" in selected_dref %}selected{% endif %}>{{ dr.value }}</option>
+      {% endfor %}
+    </select>
+
+    <button class="btn" type="submit">Filtrer</button>
+    <a class="btn" style="background:#666" href="{% url 'site_list' %}">Reset</a>
+  </form>
+
+  <div class="grid">
+    {% for s in page_obj %}
+      <div class="card">
+        {% if s.url_image %}
+          <img src="{{ s.url_image }}" alt="{{ s.appellation }}">
+        {% endif %}
+        <h3 style="margin:10px 0 6px">
+          <a href="{% url 'site_detail' s.ndegpoi %}">{{ s.appellation|default:"(sans nom)" }}</a>
+        </h3>
+        <div class="muted">{{ s.commune }} — {{ s.departement }} — {{ s.code_postal }}</div>
+
+        <div style="margin-top:8px">
+          {% for t in s.typologies.all|slice:":3" %}
+            <span class="pill">{{ t.label }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    {% empty %}
+      <p>Aucun résultat.</p>
+    {% endfor %}
+  </div>
+
+  {% with params=request.GET.urlencode %}
+  {% if page_obj.has_previous %}
+    <a class="btn" href="?{{ params }}&page={{ page_obj.previous_page_number }}">←</a>
+  {% endif %}
+  <span>Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a class="btn" href="?{{ params }}&page={{ page_obj.next_page_number }}">→</a>
+  {% endif %}
+{% endwith %}
+
+
+</div>
+</body>
+</html>

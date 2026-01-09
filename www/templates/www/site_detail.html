@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ site.appellation }}</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+      body {
+        font-family: system-ui;
+        margin: 0;
+        background: #f6f6f6;
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      .card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      @media (min-width: 900px) {
+        .grid {
+          grid-template-columns: 1.1fr 0.9fr;
+        }
+      }
+      img {
+        width: 100%;
+        border-radius: 12px;
+        display: block;
+      }
+      .pill {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #eee;
+        margin: 3px 6px 0 0;
+        font-size: 0.85rem;
+      }
+      #map {
+        height: 320px;
+        border-radius: 12px;
+      }
+      a {
+        color: inherit;
+      }
+      .muted {
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <p><a href="{% url 'site_list' %}">← Retour</a></p>
+
+      <div class="grid">
+        <div class="card">
+          <h1 style="margin-top: 0">{{ site.appellation }}</h1>
+          <p class="muted">
+            {{ site.adresse_com|default:site.adresse }} — {{ site.code_postal }}
+            {{ site.commune }} ({{ site.departement }})
+          </p>
+
+          {% if site.url_image %}
+          <img src="{{ site.url_image }}" alt="{{ site.appellation }}" />
+          {% endif %}
+
+          <h3>Infos</h3>
+          <ul>
+            <li>
+              <b>Type reconnaissance :</b> {{
+              site.type_de_reconnaissance_patrimoniale }}
+            </li>
+            <li><b>Propriétaire :</b> {{ site.proprietaire }}</li>
+            <li><b>Statut :</b> {{ site.statut_de_la_propriete_actuelle }}</li>
+            <li><b>Datation :</b> {{ site.datation }}</li>
+            <li><b>Période :</b> {{ site.periode_de_construction }}</li>
+            <li>
+              <b>Site olympique :</b> {{ site.site_olympique|default:"—" }}
+            </li>
+          </ul>
+
+          <h3>Tags</h3>
+          <div>
+            {% for t in site.typologies.all %}<span class="pill"
+              >{{ t.label }}</span
+            >{% endfor %} {% for d in site.denominations.all %}<span
+              class="pill"
+              >{{ d.label }}</span
+            >{% endfor %} {% for dr in site.dates_de_reference.all %}<span
+              class="pill"
+              >{{ dr.value }}</span
+            >{% endfor %}
+          </div>
+
+          <h3>Description</h3>
+          <p style="white-space: pre-line">
+            {{ site.historique_et_description }}
+          </p>
+
+          <h3>Accès</h3>
+          <p style="white-space: pre-line">
+            {{ site.informations_d_acces_en_transport_en_commun }}
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top: 0">Carte</h3>
+          {% if site.latitude and site.longitude %}
+          <div id="map"></div>
+          <script>
+            const lat = {{ site.latitude }};
+            const lon = {{ site.longitude }};
+            const map = L.map('map').setView([lat, lon], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              maxZoom: 19,
+              attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            L.marker([lat, lon]).addTo(map).bindPopup({{ site.appellation|escapejs|safe }});
+          </script>
+          {% else %}
+          <p class="muted">Pas de coordonnées pour ce site.</p>
+          {% endif %}
+
+          <h3>Crédits</h3>
+          <p>{{ site.credits|default:"—" }}</p>
+
+          <h3>Protection / label</h3>
+          <p>{{ site.protection_ou_label|default:"—" }}</p>
+          <p class="muted">
+            {{ site.precisions_sur_la_protection|default:"" }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
